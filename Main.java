@@ -1,6 +1,6 @@
 // 241RDB309 Orests Taskovs 6
 // 241RDB087 Andris Andersons 5
-//
+// 241RDB193 Kristofers Stūris 11
 //
 
 import java.io.FileInputStream;
@@ -112,7 +112,7 @@ public class Main {
         // insert information about authors
         System.out.println("241RDB309 Orests Taskovs 6");
         System.out.println("241RDB087 Andris Andersons 5");
-        System.out.println("000RDB000 Jānis Programmētājs");
+        System.out.println("241RDB193 Kristofers Stūris 11");
         System.out.println("111RDB111 Ilze Programmētāja");
     }
 }
