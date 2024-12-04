@@ -1,0 +1,4 @@
+//////
+
+-Metodes
+Hoffman, LZ77 (Tiek izmantoti WinZip - Harbinger)...varetu dot labu compression
