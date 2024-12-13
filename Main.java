@@ -6,7 +6,11 @@
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class Main {
@@ -59,7 +63,7 @@ public class Main {
     }
 
 
-    public static void LZ77 (String sourceFile, String resultFile){
+    public static void LZ77comp (String sourceFile, String resultFile){
         
         try {
             FileInputStream fin = new FileInputStream(sourceFile);
@@ -124,7 +128,7 @@ public class Main {
                 fos.write(tokenByte);
                 fos.write(' ');
 
-                
+
                 //sliding window here
                 if(tokenLength == 0){
                     for(int i = 0; i < searchBuffer.length - 1; i++){
@@ -164,14 +168,120 @@ public class Main {
 
     public static void comp(String sourceFile, String resultFile) {
 
-        LZ77(sourceFile, resultFile);
+        LZ77comp(sourceFile, resultFile);
 
         //todo implement huffman here or call it in LZ77 code end idk do as you will
 
     }
 
+    public static void LZ77decomp(String sourceFile, String resultFile){
+        
+        try {
+
+            FileInputStream fin = new FileInputStream(sourceFile);
+            //FileOutputStream fos = new FileOutputStream(resultFile);
+
+            byte buffer[] = new byte[30000];
+
+            byte tokenOffset = 0;
+            byte tokenLength = 0;
+            byte tokenByte = 0;
+
+
+            byte testFakeByte = 0;
+
+
+            byte nextByte = (byte)fin.read();
+
+            FileWriter myWriter = new FileWriter(resultFile);
+            for(int m = 0; m < 1000; m++){                                                                    //while(nextByte != -1){
+
+                tokenOffset = nextByte;
+                testFakeByte = (byte)fin.read();
+                tokenLength = (byte)fin.read();
+                testFakeByte = (byte)fin.read();
+                tokenByte = (byte)fin.read();
+                testFakeByte = (byte)fin.read();
+
+
+
+                if(tokenOffset == 0){
+                    myWriter.write((char)tokenByte);
+                }
+
+                if(tokenOffset > 0){
+                    for(int i = 0; i < tokenLength; i++){
+                        myWriter.write((char)buffer[tokenOffset + i]);
+                    }
+                    myWriter.write((char)tokenByte);
+                }    
+                
+                nextByte = (byte)fin.read();
+            }
+            
+
+            
+
+            myWriter.close();
+
+            /*
+            while(nextByte != -1){
+
+                tokenOffset = nextByte;
+                testFakeByte = (byte)fin.read();
+                tokenLength = (byte)fin.read();
+                testFakeByte = (byte)fin.read();
+                tokenByte = (byte)fin.read();
+                testFakeByte = (byte)fin.read();
+
+
+                if(tokenLength == 0){
+                    buffer[0] = tokenByte;
+                    fos.write(tokenByte);
+                    
+                    //shift buffer down one
+                    for(int k = buffer.length - 1; k > 1; k--){
+                        buffer[k] = buffer[k-1];
+                    }
+
+                }else{
+
+                    //todo same as if tokenlength is 0 wait no i have to include offset
+                    for(int i = 0; i < tokenLength; i++){
+                        fos.write(buffer[tokenOffset]);
+                        buffer[0] = buffer[tokenOffset];
+
+                        //shift buffer down one
+                        for(int k = buffer.length - 1; k > 1; k--){
+                            buffer[k] = buffer[k-1];
+                        }
+                    }
+
+                    
+                }
+
+
+
+                nextByte = (byte)fin.read();
+
+            }
+            */
+
+            fin.close();
+            //fos.close();
+
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        
+    }
+
     public static void decomp(String sourceFile, String resultFile) {
-        // implement this method
+
+        LZ77decomp(sourceFile, resultFile);
+
+        //todo huffman decomp
+
     }
 
     public static void size(String sourceFile) {
