@@ -20,6 +20,9 @@ public class Main {
         String choiseStr;
         String sourceFile, resultFile, firstFile, secondFile;
 
+        //testing
+        testing();
+
         loop: while (true) {
 
             choiseStr = sc.next();
@@ -62,6 +65,26 @@ public class Main {
         sc.close();
     }
 
+    public static void testing (){
+
+        try {
+            FileInputStream fin = new FileInputStream("testing3.html");
+
+            for(int i = 0; i < 40; i++){
+                System.out.println(fin.read());
+            }
+
+
+
+            fin.close();
+
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("An error occurred while reading the file: " + e.getMessage());
+        }
+
+    }
 
     public static void LZ77comp (String sourceFile, String resultFile){
         
@@ -122,11 +145,8 @@ public class Main {
 
                 //write the token into a new file
                 fos.write(tokenOffset);
-                fos.write(' ');
                 fos.write(tokenLength);
-                fos.write(' ');
                 fos.write(tokenByte);
-                fos.write(' ');
 
 
                 //sliding window here
@@ -188,8 +208,6 @@ public class Main {
             byte tokenByte = 0;
 
 
-            byte testFakeByte = 0;
-
 
             byte nextByte = (byte)fin.read();
 
@@ -197,23 +215,37 @@ public class Main {
             for(int m = 0; m < 1000; m++){                                                                    //while(nextByte != -1){
 
                 tokenOffset = nextByte;
-                testFakeByte = (byte)fin.read();
                 tokenLength = (byte)fin.read();
-                testFakeByte = (byte)fin.read();
                 tokenByte = (byte)fin.read();
-                testFakeByte = (byte)fin.read();
-
 
 
                 if(tokenOffset == 0){
                     myWriter.write((char)tokenByte);
+                    buffer[0] = tokenByte;
+
+                    //shift buffer down one
+                    for(int k = buffer.length - 1; k > 0; k--){
+                        buffer[k] = buffer[k-1];
+                    }
                 }
 
                 if(tokenOffset > 0){
                     for(int i = 0; i < tokenLength; i++){
-                        myWriter.write((char)buffer[tokenOffset + i]);
+                        myWriter.write((char)buffer[tokenOffset]);                                                      //myWriter.write((char)buffer[tokenOffset + i]);
+                        buffer[0] = tokenByte;
+
+                        //shift buffer down one
+                        for(int k = buffer.length - 1; k > 0; k--){
+                            buffer[k] = buffer[k-1];
+                        }
                     }
                     myWriter.write((char)tokenByte);
+                    buffer[0] = tokenByte;
+
+                    //shift buffer down one
+                    for(int k = buffer.length - 1; k > 0; k--){
+                        buffer[k] = buffer[k-1];
+                    }
                 }    
                 
                 nextByte = (byte)fin.read();
