@@ -4,6 +4,8 @@
 // 241RDB057 Elīna Nazarova 5
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -56,8 +58,116 @@ public class Main {
         sc.close();
     }
 
+
+    public static void LZ77 (String sourceFile, String resultFile){
+        
+        try {
+            FileInputStream fin = new FileInputStream(sourceFile);
+            FileOutputStream fos = new FileOutputStream(resultFile);
+
+            System.out.println("File opened successfully!");
+
+            byte searchBuffer[] = new byte[30000];
+            byte lookAheadBuffer[] = new byte[500];
+
+            int lenghtOfSearchBuffer = searchBuffer.length;
+
+
+            for(int i = 0; i < lookAheadBuffer.length-1; i++){          //fills look ahead buffer
+                lookAheadBuffer[i] = (byte)fin.read();
+            }
+
+
+            while(lookAheadBuffer[0] != -1){
+
+                short tokenOffset = 0;
+                short tokenLength = 0;
+                byte tokenByte = ' ';
+
+                for(int i = 0; i < lenghtOfSearchBuffer-1; i++){
+                
+                    byte searchBufferByte = searchBuffer[i];
+                    byte lookAheadBufferByte = lookAheadBuffer[0];
+    
+    
+                    if(searchBufferByte == lookAheadBufferByte){
+
+                        int k = 0;
+                        int potentionalTokenLength = 0;
+    
+                        while(searchBuffer[i+k] == lookAheadBuffer[k] && i+k < searchBuffer.length - 1){
+                            k++;
+                            potentionalTokenLength++;
+                        }
+    
+                        if(potentionalTokenLength > tokenLength){
+                            tokenLength = (short)potentionalTokenLength;
+                            tokenOffset = (short)(lenghtOfSearchBuffer - i);
+                            tokenByte = lookAheadBuffer[k];
+                        }
+    
+    
+                    }else if (tokenLength == 0){
+                        tokenLength = 0;
+                        tokenOffset = 0;
+                        tokenByte = lookAheadBuffer[0];
+                    }
+    
+                }
+    
+
+                //write the token into a new file
+                fos.write(tokenOffset);
+                fos.write(' ');
+                fos.write(tokenLength);
+                fos.write(' ');
+                fos.write(tokenByte);
+                fos.write(' ');
+
+                
+                //sliding window here
+                if(tokenLength == 0){
+                    for(int i = 0; i < searchBuffer.length - 1; i++){
+                        searchBuffer[i] = searchBuffer[i+1]; 
+                    }
+                    searchBuffer[searchBuffer.length-1] = lookAheadBuffer[0];
+    
+                    for(int i = 0; i < lookAheadBuffer.length - 1; i++){
+                        lookAheadBuffer[i] = lookAheadBuffer[i+1]; 
+                    }
+                    lookAheadBuffer[lookAheadBuffer.length - 1] = (byte)fin.read();
+                }else{
+                    for(int k = 0; k < tokenLength+1; k++){
+                        for(int i = 0; i < searchBuffer.length - 1; i++){
+                            searchBuffer[i] = searchBuffer[i+1]; 
+                        }
+                        searchBuffer[searchBuffer.length-1] = lookAheadBuffer[0];
+        
+                        for(int i = 0; i < lookAheadBuffer.length - 1; i++){
+                            lookAheadBuffer[i] = lookAheadBuffer[i+1]; 
+                        }
+                        lookAheadBuffer[lookAheadBuffer.length - 1] = (byte)fin.read();
+                    }
+                }
+            }
+
+            fin.close();
+            fos.close();
+
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("An error occurred while reading the file: " + e.getMessage());
+        }
+    }
+
+
     public static void comp(String sourceFile, String resultFile) {
-        // implement this method
+
+        LZ77(sourceFile, resultFile);
+
+        //todo implement huffman here or call it in LZ77 code end idk do as you will
+
     }
 
     public static void decomp(String sourceFile, String resultFile) {
