@@ -3,12 +3,11 @@
 // 241RDB193 Kristofers Stūris 11
 // 241RDB057 Elīna Nazarova 5
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Scanner;
@@ -86,237 +85,151 @@ public class Main {
 
     }
 
-    public static void LZ77comp (String sourceFile, String resultFile){
-        
-        try {
-            FileInputStream fin = new FileInputStream(sourceFile);
-            FileOutputStream fos = new FileOutputStream(resultFile);
 
-            System.out.println("File opened successfully!");
+    private static void lz77Compress(byte[] input, FileOutputStream fos) throws IOException {
+        int searchBufferSize = 4096;
+        int lookAheadBufferSize = 16;
 
-            byte searchBuffer[] = new byte[30000];
-            byte lookAheadBuffer[] = new byte[500];
-
-            int lenghtOfSearchBuffer = searchBuffer.length;
-
-
-            for(int i = 0; i < lookAheadBuffer.length-1; i++){          //fills look ahead buffer
-                lookAheadBuffer[i] = (byte)fin.read();
-            }
-
-
-            while(lookAheadBuffer[0] != -1){
-
-                short tokenOffset = 0;
-                short tokenLength = 0;
-                byte tokenByte = ' ';
-
-                for(int i = 0; i < lenghtOfSearchBuffer-1; i++){
+        for (int i = 0; i < input.length;) {
+            int bestOffset = 0;
+            int bestLength = 0;
+            byte nextByte = 0;
+            
+            // Search in the search buffer for the longest match
+            int searchStart = Math.max(0, i - searchBufferSize);
+            for (int j = searchStart; j < i; j++) {
+                int currentLength = 0;
                 
-                    byte searchBufferByte = searchBuffer[i];
-                    byte lookAheadBufferByte = lookAheadBuffer[0];
-    
-    
-                    if(searchBufferByte == lookAheadBufferByte){
-
-                        int k = 0;
-                        int potentionalTokenLength = 0;
-    
-                        while(searchBuffer[i+k] == lookAheadBuffer[k] && i+k < searchBuffer.length - 1){
-                            k++;
-                            potentionalTokenLength++;
-                        }
-    
-                        if(potentionalTokenLength > tokenLength){
-                            tokenLength = (short)potentionalTokenLength;
-                            tokenOffset = (short)(lenghtOfSearchBuffer - i);
-                            tokenByte = lookAheadBuffer[k];
-                        }
-    
-    
-                    }else if (tokenLength == 0){
-                        tokenLength = 0;
-                        tokenOffset = 0;
-                        tokenByte = lookAheadBuffer[0];
-                    }
-    
+                // Check how long the match continues
+                while (i + currentLength < input.length && 
+                       currentLength < lookAheadBufferSize && 
+                       input[j + currentLength] == input[i + currentLength]) {
+                    currentLength++;
                 }
-    
-
-                //write the token into a new file
-                fos.write(tokenOffset);
-                fos.write(tokenLength);
-                fos.write(tokenByte);
-
-
-                //sliding window here
-                if(tokenLength == 0){
-                    for(int i = 0; i < searchBuffer.length - 1; i++){
-                        searchBuffer[i] = searchBuffer[i+1]; 
-                    }
-                    searchBuffer[searchBuffer.length-1] = lookAheadBuffer[0];
-    
-                    for(int i = 0; i < lookAheadBuffer.length - 1; i++){
-                        lookAheadBuffer[i] = lookAheadBuffer[i+1]; 
-                    }
-                    lookAheadBuffer[lookAheadBuffer.length - 1] = (byte)fin.read();
-                }else{
-                    for(int k = 0; k < tokenLength+1; k++){
-                        for(int i = 0; i < searchBuffer.length - 1; i++){
-                            searchBuffer[i] = searchBuffer[i+1]; 
-                        }
-                        searchBuffer[searchBuffer.length-1] = lookAheadBuffer[0];
-        
-                        for(int i = 0; i < lookAheadBuffer.length - 1; i++){
-                            lookAheadBuffer[i] = lookAheadBuffer[i+1]; 
-                        }
-                        lookAheadBuffer[lookAheadBuffer.length - 1] = (byte)fin.read();
-                    }
-                }
-            }
-
-            fin.close();
-            fos.close();
-
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found: " + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("An error occurred while reading the file: " + e.getMessage());
-        }
-    }
-
-
-    public static void comp(String sourceFile, String resultFile) {
-
-        LZ77comp(sourceFile, resultFile);
-
-        //todo implement huffman here or call it in LZ77 code end idk do as you will
-
-    }
-
-    public static void LZ77decomp(String sourceFile, String resultFile){
-        
-        try {
-
-            FileInputStream fin = new FileInputStream(sourceFile);
-            //FileOutputStream fos = new FileOutputStream(resultFile);
-
-            byte buffer[] = new byte[30000];
-
-            byte tokenOffset = 0;
-            byte tokenLength = 0;
-            byte tokenByte = 0;
-
-
-
-            byte nextByte = (byte)fin.read();
-
-            FileWriter myWriter = new FileWriter(resultFile);
-            while(nextByte != -1){                                          //for(int m = 0; m < 1000; m++){
-
-                tokenOffset = nextByte;
-                tokenLength = (byte)fin.read();
-                tokenByte = (byte)fin.read();
-
-
-                if(tokenOffset == 0){
-                    myWriter.write((char)tokenByte);
-                    buffer[0] = tokenByte;
-
-                    //shift buffer down one
-                    for(int k = buffer.length - 1; k > 0; k--){
-                        buffer[k] = buffer[k-1];
-                    }
-                }
-
-                if(tokenOffset > 0){
-                    for(int i = 0; i < tokenLength; i++){
-                        myWriter.write((char)buffer[tokenOffset]);
-                        buffer[0] = buffer[tokenOffset];
-
-                        //shift buffer down one
-                        for(int k = buffer.length - 1; k > 0; k--){
-                            buffer[k] = buffer[k-1];
-                        }
-                    }
-                    myWriter.write((char)tokenByte);
-                    buffer[0] = tokenByte;
-
-                    //shift buffer down one
-                    for(int k = buffer.length - 1; k > 0; k--){
-                        buffer[k] = buffer[k-1];
-                    }
-                }    
                 
-                nextByte = (byte)fin.read();
+                // Update best match if current match is longer
+                if (currentLength > bestLength) {
+                    bestLength = currentLength;
+                    bestOffset = i - j;
+                    if (i + currentLength < input.length) {
+                        nextByte = input[i + currentLength];
+                    }
+                }
             }
             
-
-            //testing
-            for(int i = 0; i < 20; i++){
-                System.out.print(buffer[i]+" ");
+            // Write token
+            if (bestLength > 0) {
+                // Write 16-bit offset
+                fos.write((bestOffset >> 8) & 0xFF);  // high byte
+                fos.write(bestOffset & 0xFF);         // low byte
+                fos.write(bestLength);
+                fos.write(nextByte);
+                i += bestLength + 1;
+            } else {
+                // Literal byte
+                fos.write(0);  // zero offset (high byte)
+                fos.write(0);  // zero offset (low byte)
+                fos.write(0);  // zero length
+                fos.write(input[i]);
+                i++;
             }
+        }
+    }
 
-            myWriter.close();
+    
 
-            /*
-            while(nextByte != -1){
+    public static void comp(String sourceFile, String resultFile) {
+        try {
+            // Read entire file content
+            byte[] fileContent = Files.readAllBytes(Paths.get(sourceFile));
+            
+            // Open output stream
+            try (FileOutputStream fos = new FileOutputStream(resultFile)) {
+                // Write original file size to help with potential truncation
+                int originalSize = fileContent.length;
+                fos.write((originalSize >> 24) & 0xFF);
+                fos.write((originalSize >> 16) & 0xFF);
+                fos.write((originalSize >> 8) & 0xFF);
+                fos.write(originalSize & 0xFF);
+                
+                // Perform compression
+                lz77Compress(fileContent, fos);
+            }
+            
+            System.out.println("Compression complete.");
+        } catch (IOException e) {
+            System.out.println("Compression error: " + e.getMessage());
+        }
+    }
 
-                tokenOffset = nextByte;
-                testFakeByte = (byte)fin.read();
-                tokenLength = (byte)fin.read();
-                testFakeByte = (byte)fin.read();
-                tokenByte = (byte)fin.read();
-                testFakeByte = (byte)fin.read();
-
-
-                if(tokenLength == 0){
-                    buffer[0] = tokenByte;
-                    fos.write(tokenByte);
-                    
-                    //shift buffer down one
-                    for(int k = buffer.length - 1; k > 1; k--){
-                        buffer[k] = buffer[k-1];
-                    }
-
-                }else{
-
-                    //todo same as if tokenlength is 0 wait no i have to include offset
-                    for(int i = 0; i < tokenLength; i++){
-                        fos.write(buffer[tokenOffset]);
-                        buffer[0] = buffer[tokenOffset];
-
-                        //shift buffer down one
-                        for(int k = buffer.length - 1; k > 1; k--){
-                            buffer[k] = buffer[k-1];
-                        }
-                    }
-
-                    
+    private static byte[] lz77Decompress(byte[] compressed) {
+        ByteArrayOutputStream decompressed = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int bufferIndex = 0;
+        
+        for (int i = 0; i < compressed.length; i += 4) {
+            // Extract token components
+            int highOffset = compressed[i] & 0xFF;
+            int lowOffset = compressed[i + 1] & 0xFF;
+            int offset = (highOffset << 8) | lowOffset;
+            int length = compressed[i + 2] & 0xFF;
+            int nextByte = compressed[i + 3] & 0xFF;
+            
+            if (offset == 0 && length == 0) {
+                // Literal byte
+                decompressed.write(nextByte);
+                buffer[bufferIndex] = (byte)nextByte;
+                bufferIndex = (bufferIndex + 1) % buffer.length;
+            } else {
+                // Back-reference
+                int startPos = (bufferIndex - offset + buffer.length) % buffer.length;
+                
+                // Copy matching sequence
+                for (int j = 0; j < length; j++) {
+                    int copyByte = buffer[(startPos + j) % buffer.length] & 0xFF;
+                    decompressed.write(copyByte);
+                    buffer[bufferIndex] = (byte)copyByte;
+                    bufferIndex = (bufferIndex + 1) % buffer.length;
                 }
-
-
-
-                nextByte = (byte)fin.read();
-
+                
+                // Add next byte
+                decompressed.write(nextByte);
+                buffer[bufferIndex] = (byte)nextByte;
+                bufferIndex = (bufferIndex + 1) % buffer.length;
             }
-            */
-
-            fin.close();
-            //fos.close();
-
-        } catch (Exception e) {
-            // TODO: handle exception
         }
         
+        return decompressed.toByteArray();
     }
 
     public static void decomp(String sourceFile, String resultFile) {
-
-        LZ77decomp(sourceFile, resultFile);
-
-        //todo huffman decomp
-
+        try (FileInputStream fin = new FileInputStream(sourceFile);
+             FileOutputStream fos = new FileOutputStream(resultFile)) {
+            
+            // Read original file size
+            int originalSize = 
+                (fin.read() << 24) | 
+                (fin.read() << 16) | 
+                (fin.read() << 8) | 
+                fin.read();
+            
+            // Read compressed content
+            byte[] compressedContent = fin.readAllBytes();
+            
+            // Decompress
+            byte[] decompressedContent = lz77Decompress(compressedContent);
+            
+            // Trim to original size to handle potential extra characters
+            if (decompressedContent.length > originalSize) {
+                fos.write(decompressedContent, 0, originalSize);
+            } else {
+                fos.write(decompressedContent);
+            }
+            
+            System.out.println("Decompression complete.");
+        } catch (IOException e) {
+            System.out.println("Decompression error: " + e.getMessage());
+        }
     }
 
     public static void size(String sourceFile) {
@@ -371,3 +284,4 @@ public class Main {
         System.out.println("241RDB057 Elīna Nazarova 5");
     }
 }
+
