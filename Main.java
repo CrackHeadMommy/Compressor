@@ -21,7 +21,7 @@ public class Main {
         String sourceFile, resultFile, firstFile, secondFile;
 
         //testing
-        testing();
+        //testing();
 
         loop: while (true) {
 
@@ -212,7 +212,7 @@ public class Main {
             byte nextByte = (byte)fin.read();
 
             FileWriter myWriter = new FileWriter(resultFile);
-            for(int m = 0; m < 1000; m++){                                                                    //while(nextByte != -1){
+            while(nextByte != -1){                                          //for(int m = 0; m < 1000; m++){
 
                 tokenOffset = nextByte;
                 tokenLength = (byte)fin.read();
@@ -231,8 +231,8 @@ public class Main {
 
                 if(tokenOffset > 0){
                     for(int i = 0; i < tokenLength; i++){
-                        myWriter.write((char)buffer[tokenOffset]);                                                      //myWriter.write((char)buffer[tokenOffset + i]);
-                        buffer[0] = tokenByte;
+                        myWriter.write((char)buffer[tokenOffset]);
+                        buffer[0] = buffer[tokenOffset];
 
                         //shift buffer down one
                         for(int k = buffer.length - 1; k > 0; k--){
@@ -252,7 +252,10 @@ public class Main {
             }
             
 
-            
+            //testing
+            for(int i = 0; i < 20; i++){
+                System.out.print(buffer[i]+" ");
+            }
 
             myWriter.close();
 
