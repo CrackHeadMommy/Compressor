@@ -280,8 +280,8 @@ public class Main {
         // insert information about authors
         System.out.println("241RDB309 Orests Taskovs 6");
         System.out.println("241RDB087 Andris Andersons 5");
-        System.out.println("241RDB193 Kristofers Stūris 11");
-        System.out.println("241RDB057 Elīna Nazarova 5");
+        System.out.println("241RDB193 Kristofers Sturis 11");
+        System.out.println("241RDB057 Elina Nazarova 5");
     }
 }
 
