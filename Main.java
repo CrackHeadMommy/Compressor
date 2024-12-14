@@ -5,7 +5,6 @@
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,67 +63,46 @@ public class Main {
         sc.close();
     }
 
-    public static void testing (){
-
-        try {
-            FileInputStream fin = new FileInputStream("testing3.html");
-
-            for(int i = 0; i < 40; i++){
-                System.out.println(fin.read());
-            }
-
-
-
-            fin.close();
-
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found: " + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("An error occurred while reading the file: " + e.getMessage());
-        }
-
-    }
-
 
     private static void lz77Compress(byte[] input, FileOutputStream fos) throws IOException {
-        int searchBufferSize = 4096;
+        int searchBuffSiz = 4096;
         int lookAheadBufferSize = 16;
 
         for (int i = 0; i < input.length;) {
             int bestOffset = 0;
-            int bestLength = 0;
+            int bestLen = 0;
             byte nextByte = 0;
             
-            // Search in the search buffer for the longest match
-            int searchStart = Math.max(0, i - searchBufferSize);
+            // bufferitis prieks longest matchh
+            int searchStart = Math.max(0, i - searchBuffSiz);
             for (int j = searchStart; j < i; j++) {
-                int currentLength = 0;
+                int currLen = 0;
                 
-                // Check how long the match continues
-                while (i + currentLength < input.length && 
-                       currentLength < lookAheadBufferSize && 
-                       input[j + currentLength] == input[i + currentLength]) {
-                    currentLength++;
+                // cik ilgi matcho
+                while (i + currLen < input.length && 
+                       currLen < lookAheadBufferSize && 
+                       input[j + currLen] == input[i + currLen]) {
+                    currLen++;
                 }
                 
-                // Update best match if current match is longer
-                if (currentLength > bestLength) {
-                    bestLength = currentLength;
+                // update ja ir garaks match
+                if (currLen > bestLen) {
+                    bestLen = currLen;
                     bestOffset = i - j;
-                    if (i + currentLength < input.length) {
-                        nextByte = input[i + currentLength];
+                    if (i + currLen < input.length) {
+                        nextByte = input[i + currLen];
                     }
                 }
             }
             
-            // Write token
-            if (bestLength > 0) {
-                // Write 16-bit offset
+            // token
+            if (bestLen > 0) {
+                // 16-bit offset
                 fos.write((bestOffset >> 8) & 0xFF);  // high byte
                 fos.write(bestOffset & 0xFF);         // low byte
-                fos.write(bestLength);
+                fos.write(bestLen);
                 fos.write(nextByte);
-                i += bestLength + 1;
+                i += bestLen + 1;
             } else {
                 // Literal byte
                 fos.write(0);  // zero offset (high byte)
@@ -140,19 +118,18 @@ public class Main {
 
     public static void comp(String sourceFile, String resultFile) {
         try {
-            // Read entire file content
+            
             byte[] fileContent = Files.readAllBytes(Paths.get(sourceFile));
             
-            // Open output stream
+            
             try (FileOutputStream fos = new FileOutputStream(resultFile)) {
-                // Write original file size to help with potential truncation
+
                 int originalSize = fileContent.length;
                 fos.write((originalSize >> 24) & 0xFF);
                 fos.write((originalSize >> 16) & 0xFF);
                 fos.write((originalSize >> 8) & 0xFF);
                 fos.write(originalSize & 0xFF);
                 
-                // Perform compression
                 lz77Compress(fileContent, fos);
             }
             
@@ -164,11 +141,10 @@ public class Main {
 
     private static byte[] lz77Decompress(byte[] compressed) {
         ByteArrayOutputStream decompressed = new ByteArrayOutputStream();
-        byte[] buffer = new byte[4096];
-        int bufferIndex = 0;
+        byte[] buff = new byte[4096];
+        int buffIndex = 0;
         
         for (int i = 0; i < compressed.length; i += 4) {
-            // Extract token components
             int highOffset = compressed[i] & 0xFF;
             int lowOffset = compressed[i + 1] & 0xFF;
             int offset = (highOffset << 8) | lowOffset;
@@ -176,26 +152,24 @@ public class Main {
             int nextByte = compressed[i + 3] & 0xFF;
             
             if (offset == 0 && length == 0) {
-                // Literal byte
                 decompressed.write(nextByte);
-                buffer[bufferIndex] = (byte)nextByte;
-                bufferIndex = (bufferIndex + 1) % buffer.length;
+                buff[buffIndex] = (byte)nextByte;
+                buffIndex = (buffIndex + 1) % buff.length;
             } else {
-                // Back-reference
-                int startPos = (bufferIndex - offset + buffer.length) % buffer.length;
+                int startPos = (buffIndex - offset + buff.length) % buff.length;
                 
-                // Copy matching sequence
+                // kope matcvhing sekvenci
                 for (int j = 0; j < length; j++) {
-                    int copyByte = buffer[(startPos + j) % buffer.length] & 0xFF;
+                    int copyByte = buff[(startPos + j) % buff.length] & 0xFF;
                     decompressed.write(copyByte);
-                    buffer[bufferIndex] = (byte)copyByte;
-                    bufferIndex = (bufferIndex + 1) % buffer.length;
+                    buff[buffIndex] = (byte)copyByte;
+                    buffIndex = (buffIndex + 1) % buff.length;
                 }
                 
-                // Add next byte
+                // pievieno byte
                 decompressed.write(nextByte);
-                buffer[bufferIndex] = (byte)nextByte;
-                bufferIndex = (bufferIndex + 1) % buffer.length;
+                buff[buffIndex] = (byte)nextByte;
+                buffIndex = (buffIndex + 1) % buff.length;
             }
         }
         
@@ -206,24 +180,21 @@ public class Main {
         try (FileInputStream fin = new FileInputStream(sourceFile);
              FileOutputStream fos = new FileOutputStream(resultFile)) {
             
-            // Read original file size
             int originalSize = 
                 (fin.read() << 24) | 
                 (fin.read() << 16) | 
                 (fin.read() << 8) | 
                 fin.read();
             
-            // Read compressed content
-            byte[] compressedContent = fin.readAllBytes();
+            byte[] compCont = fin.readAllBytes();
             
-            // Decompress
-            byte[] decompressedContent = lz77Decompress(compressedContent);
+            byte[] decompCont = lz77Decompress(compCont);
             
-            // Trim to original size to handle potential extra characters
-            if (decompressedContent.length > originalSize) {
-                fos.write(decompressedContent, 0, originalSize);
+            // Lai nav extra char
+            if (decompCont.length > originalSize) {
+                fos.write(decompCont, 0, originalSize);
             } else {
-                fos.write(decompressedContent);
+                fos.write(decompCont);
             }
             
             System.out.println("Decompression complete.");
@@ -277,11 +248,10 @@ public class Main {
     }
 
     public static void about() {
-        // insert information about authors
         System.out.println("241RDB309 Orests Taskovs 6");
         System.out.println("241RDB087 Andris Andersons 5");
-        System.out.println("241RDB193 Kristofers Sturis 11");
-        System.out.println("241RDB057 Elina Nazarova 5");
+        System.out.println("241RDB193 Kristofers Stūris 11");
+        System.out.println("241RDB057 Elīna Nazarova 5");
     }
 }
 
