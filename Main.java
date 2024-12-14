@@ -22,46 +22,91 @@ public class Main {
         //testing();
 
         loop: while (true) {
-
+            System.out.print("Enter command: ");
             choiseStr = sc.next();
 
             switch (choiseStr) {
                 case "comp":
                     System.out.print("source file name: ");
                     sourceFile = sc.next();
+                    if (!Files.exists(Paths.get(sourceFile))) {
+                        System.out.println("Error: Source file not found: " + sourceFile);
+                        break;
+                    }
                     System.out.print("archive name: ");
                     resultFile = sc.next();
-                    comp(sourceFile, resultFile);
+                    try {
+                        comp(sourceFile, resultFile);
+                    } catch (Exception e) {
+                        System.out.println("Error during compression: " + e.getMessage());
+                    }
                     break;
+
                 case "decomp":
                     System.out.print("archive name: ");
                     sourceFile = sc.next();
+                    if (!Files.exists(Paths.get(sourceFile))) {
+                        System.out.println("Error: Archive file not found: " + sourceFile);
+                        break;
+                    }
                     System.out.print("file name: ");
                     resultFile = sc.next();
-                    decomp(sourceFile, resultFile);
+                    try {
+                        decomp(sourceFile, resultFile);
+                    } catch (Exception e) {
+                        System.out.println("Error during decompression: " + e.getMessage());
+                    }
                     break;
+
                 case "size":
                     System.out.print("file name: ");
                     sourceFile = sc.next();
-                    size(sourceFile);
+                    if (!Files.exists(Paths.get(sourceFile))) {
+                        System.out.println("Error: File not found: " + sourceFile);
+                        break;
+                    }
+                    try {
+                        size(sourceFile);
+                    } catch (Exception e) {
+                        System.out.println("Error retrieving file size: " + e.getMessage());
+                    }
                     break;
+
                 case "equal":
                     System.out.print("first file name: ");
                     firstFile = sc.next();
+                    if (!Files.exists(Paths.get(firstFile))) {
+                        System.out.println("Error: First file not found: " + firstFile);
+                        break;
+                    }
                     System.out.print("second file name: ");
                     secondFile = sc.next();
-                    System.out.println(equal(firstFile, secondFile));
+                    if (!Files.exists(Paths.get(secondFile))) {
+                        System.out.println("Error: Second file not found: " + secondFile);
+                        break;
+                    }
+                    try {
+                        System.out.println(equal(firstFile, secondFile));
+                    } catch (Exception e) {
+                        System.out.println("Error comparing files: " + e.getMessage());
+                    }
                     break;
+
                 case "about":
                     about();
                     break;
+
                 case "exit":
                     break loop;
+
+                default:
+                    System.out.println("Input error: Unknown command.");
             }
         }
-
         sc.close();
     }
+
+
 
 
     private static void lz77Compress(byte[] input, FileOutputStream fos) throws IOException {
@@ -135,8 +180,9 @@ public class Main {
             
             System.out.println("Compression complete.");
         } catch (IOException e) {
-            System.out.println("Compression error: " + e.getMessage());
+            System.out.println("File name error: " + e.getMessage());
         }
+        
     }
 
     private static byte[] lz77Decompress(byte[] compressed) {
@@ -199,7 +245,7 @@ public class Main {
             
             System.out.println("Decompression complete.");
         } catch (IOException e) {
-            System.out.println("Decompression error: " + e.getMessage());
+            System.out.println("File name error: " + e.getMessage());
         }
     }
 
