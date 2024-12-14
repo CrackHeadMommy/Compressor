@@ -2,3 +2,8 @@
 
 -Metodes
 Hoffman, LZ77 (Tiek izmantoti WinZip - Harbinger)...varetu dot labu compression
+
+
+Lz77 problema: Neredz garos burtus
+
+japarveido uz UTF-8
